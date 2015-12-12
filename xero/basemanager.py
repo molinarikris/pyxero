@@ -80,6 +80,7 @@ class BaseManager(object):
         'DateString',
         'HasErrors',
         'DueDateString',
+        'extra_params'
     )
     OPERATOR_MAPPINGS = {
         'gt': '>',
@@ -131,15 +132,17 @@ class BaseManager(object):
 
         return root_elm
 
-    def _prepare_data_for_save(self, data):
-        if isinstance(data, list) or isinstance(data, tuple):
-            root_elm = Element(self.name)
-            for d in data:
-                sub_elm = SubElement(root_elm, self.singular)
-                self.dict_to_xml(sub_elm, d)
+    def _prepare_data_for_save(self, data, name=True):
+        if name is True:
+            if isinstance(data, list) or isinstance(data, tuple):
+                root_elm = Element(self.name)
+                for d in data:
+                    sub_elm = SubElement(root_elm, self.singular)
+                    self.dict_to_xml(sub_elm, d)
+            else:
+                root_elm = self.dict_to_xml(Element(self.singular), data)
         else:
-            root_elm = self.dict_to_xml(Element(self.singular), data)
-
+                root_elm = self.dict_to_xml(Element(data.keys()[0] + 's'), data)
         # In python3 this seems to return a bytestring
         return six.u(tostring(root_elm))
 
@@ -247,8 +250,16 @@ class BaseManager(object):
         return len(data)
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
-        uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
+        if 'extra_params' in data:
+            uri = '/'.join([self.base_url,
+                            self.name,
+                            data['extra_params'][self.name],
+                            data['extra_params']['extra_url_param']
+                           ])
+            body = {'xml': self._prepare_data_for_save(data, name=False)}
+        else:
+            uri = '/'.join([self.base_url, self.name])
         params = self.extra_params.copy()
         if not summarize_errors:
             params['summarizeErrors'] = 'false'
