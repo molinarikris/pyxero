@@ -181,6 +181,9 @@ class BaseManager(object):
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert, timeout=timeout)
 
+            print body
+            print response.text
+
             if response.status_code == 200:
                 # If we haven't got XML or JSON, assume we're being returned a binary file
                 if not response.headers['content-type'].startswith('application/json'):
@@ -188,8 +191,6 @@ class BaseManager(object):
 
                 return self._parse_api_response(response, self.name)
 
-            print body
-            print response.text
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
