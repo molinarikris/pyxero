@@ -188,6 +188,9 @@ class BaseManager(object):
 
                 return self._parse_api_response(response, self.name)
 
+            print body
+            print response.text
+
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
 
